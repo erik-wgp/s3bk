@@ -1,0 +1,53 @@
+
+aws_profile: s3bk
+aws_region: us-east-1
+
+bk_map:
+
+  daily: 
+    bucket_name: wgp-bk-test
+    bucket_path: "31"
+    storage: STANDARD
+    interval: daily
+    retention: 32
+
+  short:
+    bucket_name: wgp-bk-test
+    bucket_path: "66"
+    storage: STANDARD_IA
+    interval: evendays
+    retention: 66
+
+  medium:
+    bucket_name: wgp-bk-test
+    bucket_path: "93"
+    storage: STANDARD_IA
+    interval: weekly
+    retention: 93
+
+  long:
+    bucket_name: wgp-bk-test
+    bucket_path: "186"
+    storage: STANDARD_IA
+    interval: monthly
+    retention: 186
+
+  hurrah:
+    bucket_name: wgp-bk-test
+    bucket_path: "365"
+    storage: STANDARD_IA
+    interval: yearly
+    retention: 365
+
+  archive:
+    bucket_name: wgp-bk-test
+    bucket_path: "archive"
+    storage: STANDARD_IA
+    retention: 9999999
+
+  security:
+    bucket_name: wgp-bk-test-sec
+    bucket_path: "sec"
+    storage: STANDARD_IA
+    retention: 365
+

@@ -6,10 +6,11 @@ require 'optparse'
 options = {}
 
 opts = OptionParser.new do |opts|
-   opts.banner = "Usage: s3bk-auto.rb [ --rename-suffix <suffix> ] [ --move-to-dir <dir> ] file1 [ file2 [ ... ] ]"
-   opts.on("--rename-suffix SUFFIX" "On upload success, rename file with appended SUFFIX") 
-   opts.on("--move-to-dir DIR", "On success, move file to DIR (relative to src file[s])")
+   opts.banner = "Usage: s3bk-auto.rb [ --fake ] [ --rename-suffix <suffix> ] [ --move-to-dir <dir> ] file1 [ file2 [ ... ] ]"
+   opts.on("--rename-suffix SUFFIX", "on upload success, rename file with appended SUFFIX") 
+   opts.on("--move-to-dir DIR", "on success, move file to DIR (relative to src file[s])")
    opts.on("--backup-type TYPE", "override backup type rather than trying to parse date from filename")
+   opts.on("--fake", "just print out what backup type would be used for the file")
 end
 
 opts.parse!(into: options)
@@ -50,11 +51,17 @@ ARGV.each do |srcfile|
    backup_type = options[:"backup-type"]
    backup_type ||= s3bk_determine_backup_type_from_filename(srcfile)
 
-   if s3bk_upload_file(srcfile, backup_type)
+   if options[:fake]
+      puts "(fake) #{srcfile} -> #{backup_type}"
+      if destfile
+         puts "\twould rename to #{destfile}"
+      end
+   elsif s3bk_upload_file(srcfile, backup_type)
       if destfile
          puts "\trename: #{srcfile} #{destfile}"
          File.rename(srcfile, destfile)
       end
    else
+      # error printed in library
    end
 end

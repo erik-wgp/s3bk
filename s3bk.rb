@@ -16,7 +16,8 @@ def load_config
 end
 
 def s3bk_generate_bucket_path(backup_type)
-   $s3bk_config["bk_map"][backup_type]["bucket_name"] + "/" + $s3bk_config["bk_map"][backup_type]["bucket_path"]
+#   $s3bk_config["bk_map"][backup_type]["bucket_name"] + "/" + $s3bk_config["bk_map"][backup_type]["bucket_path"]
+    $s3bk_config["bk_map"][backup_type]["bucket_path"]
 end
 
 def s3bk_generate_full_path(filename, backup_type)
@@ -24,7 +25,7 @@ def s3bk_generate_full_path(filename, backup_type)
 end
 
 def s3bk_generate_full_path_secure(filename, backup_type)
-   s3bk_generate_bucket_path(backup_type) + "/" + File.basename(filename) + SecureRandom.uuid
+   s3bk_generate_bucket_path(backup_type) + "/" + File.basename(filename) + "-" + SecureRandom.uuid
 end
 
 def s3bk_upload_file(filename, backup_type)
@@ -40,6 +41,14 @@ def s3bk_upload_file(filename, backup_type)
    obj = $global_s3.bucket(backup_config["bucket_name"]).object(s3bk_generate_full_path_secure(filename, backup_type))
 
    if obj.upload_file(filename, storage_class: backup_config["storage"])
+#   resp = $global_s3.put_object( {
+#      body: filename,
+#      bucket: backup_config["bucket_name"],
+#      key: s3bk_generate_full_path_secure(filename, backup_type),
+#      storage_class: backup_config["storage"]
+#   })
+#   ap resp
+#   if resp
       puts "uploaded #{filename} as #{backup_type}"
       return true
    else
@@ -83,5 +92,29 @@ def s3bk_parse_datestring_basic(filename)
    return datestring
 end
 
+### generate some whitespace based on backup retention
+### for visualization purposes
+def s3bk_tabs_for(backup_type)
+   $s3bk_tab_map ||= s3bk_get_tab_map
+   return $s3bk_tab_map[backup_type]
+end
+
+def s3bk_get_tab_map
+   tab_map = {}
+
+   sorted_bktypes = $s3bk_config["bk_map"].sort { |a,b| a[1]["retention"] <=> b[1]["retention"] }
+
+   i = 0
+   sorted_bktypes.each do |bktype|
+      tab_map[bktype[0]] = " " * i
+      i += 8
+   end
+
+   tab_map
+end
+
 $s3bk_config = load_config
+cred = Aws::SharedCredentials.new(profile_name: $s3bk_config["aws_profile"])
+Aws.config[:credentials] = cred
 $global_s3 ||= Aws::S3::Resource.new
+

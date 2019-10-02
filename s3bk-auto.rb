@@ -2,6 +2,7 @@
 
 require File.dirname(__FILE__) + '/s3bk.rb'
 require 'optparse'
+include S3bk
 
 options = {}
 
@@ -49,14 +50,14 @@ ARGV.each do |srcfile|
    end
 
    backup_type = options[:"backup-type"]
-   backup_type ||= s3bk_determine_backup_type_from_filename(srcfile)
+   backup_type ||= S3bk::s3bk_determine_backup_type_from_filename(srcfile)
 
    if options[:fake]
       puts "(fake) #{srcfile} -> #{backup_type}"
       if destfile
          puts "\twould rename to #{destfile}"
       end
-   elsif s3bk_upload_file(srcfile, backup_type)
+   elsif S3bk::s3bk_upload_file(srcfile, backup_type)
       if destfile
          puts "\trename: #{srcfile} #{destfile}"
          File.rename(srcfile, destfile)

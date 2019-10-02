@@ -9,47 +9,56 @@ require 'active_support'
 require 'active_support/time'
 require "securerandom"
 
-module S3bk
-   def self.load_config
-      config = ENV["S3BK_CONFIG"]
-      config ||= File.dirname(__FILE__) + "/s3bk.yml"
-      return YAML.load(File.read(config)).to_h
+class S3bkUploader
+
+   def initialize(config_file = nil)
+      config_file ||= ENV["S3BK_CONFIG"]
+      config_file ||= File.dirname(__FILE__) + "/s3bk.yml"
+      if ! File.exists? config_file 
+         raise ArgumentError, "Unable to locate config file"
+      end
+      @config = load_config(config_file)
+   end
+
+   def load_config(config)
+      YAML.load(File.read(config)).to_h
+   end
+
+   def aws_s3
+      @aws_s3 if @aws_s3
+
+      cred = Aws::SharedCredentials.new(profile_name: @config["aws_profile"])
+      Aws.config[:credentials] = cred
+      @aws_s3 = Aws::S3::Resource.new(region: @config["aws_region"])
+   end
+
+   def generate_bucket_path(backup_type)
+       @config["bk_map"][backup_type]["bucket_path"]
    end
    
-   def self.s3bk_generate_bucket_path(backup_type)
-   #   $s3bk_config["bk_map"][backup_type]["bucket_name"] + "/" + $s3bk_config["bk_map"][backup_type]["bucket_path"]
-       $s3bk_config["bk_map"][backup_type]["bucket_path"]
+   def generate_full_path(filename, backup_type)
+      generate_bucket_path(backup_type) + "/" + File.basename(filename)
+   end
+
+   ### appending a uuid would make it difficult for an attacker to overwrite the backups
+   ### if they have access to the upload credentials
+   ### (the upload credentials should not be able to list the bucket)   
+   def generate_full_path_secure(filename, backup_type)
+      generate_bucket_path(backup_type) + "/" + File.basename(filename) + "-" + SecureRandom.uuid
    end
    
-   def self.s3bk_generate_full_path(filename, backup_type)
-      s3bk_generate_bucket_path(backup_type) + "/" + File.basename(filename)
-   end
-   
-   def self.s3bk_generate_full_path_secure(filename, backup_type)
-      s3bk_generate_bucket_path(backup_type) + "/" + File.basename(filename) + "-" + SecureRandom.uuid
-   end
-   
-   def self.s3bk_upload_file(filename, backup_type)
-      $s3bk_aws ||= Aws::S3::Resource.new(region: $s3bk_config["aws_region"])
+   def upload_file(filename, backup_type)
    
       if ! File.exists? filename
          STDERR.print "filename doesn't exist, upload failed\n"
          return false
       end
    
-      backup_config = $s3bk_config["bk_map"][backup_type]
+      backup_config = @config["bk_map"][backup_type]
    
-      obj = $global_s3.bucket(backup_config["bucket_name"]).object(s3bk_generate_full_path_secure(filename, backup_type))
+      obj = aws_s3.bucket(backup_config["bucket_name"]).object(generate_full_path_secure(filename, backup_type))
    
       if obj.upload_file(filename, storage_class: backup_config["storage"])
-   #   resp = $global_s3.put_object( {
-   #      body: filename,
-   #      bucket: backup_config["bucket_name"],
-   #      key: s3bk_generate_full_path_secure(filename, backup_type),
-   #      storage_class: backup_config["storage"]
-   #   })
-   #   ap resp
-   #   if resp
          puts "uploaded #{filename} as #{backup_type}"
          return true
       else
@@ -58,18 +67,18 @@ module S3bk
       end
    end
    
-   def self.s3bk_determine_backup_type_from_filename(filename)
+   def determine_backup_type_from_filename(filename)
       file_base = File.basename(filename)
    
-      datestring = s3bk_parse_datestring_basic(file_base)
+      datestring = parse_datestring_basic(file_base)
    
-      $s3bk_config["bk_map"].select { |bktype, bktype_info|
+      @config["bk_map"].select { |bktype, bktype_info|
          next unless bktype_info["interval"]      
-         s3bk_datestring_matches_interval(datestring, bktype_info["interval"])
+         datestring_matches_interval(datestring, bktype_info["interval"])
       }.sort_by { |k,v| v["retention"] }.reverse.first.first
    end
    
-   def self.s3bk_datestring_matches_interval(datestring, interval_desc)
+   def datestring_matches_interval(datestring, interval_desc)
       if interval_desc == "daily"
          return true
       elsif interval_desc == "evendays"
@@ -87,23 +96,24 @@ module S3bk
       end
    end
    
-   def self.s3bk_parse_datestring_basic(filename)
+   # y2.1k bug
+   def parse_datestring_basic(filename)
       file_base = File.basename(filename)
-      /(?<datestring>\d{8})/ =~ file_base
+      /(?<datestring>20\d{6})/ =~ file_base
       return datestring
    end
    
    ### generate some whitespace based on backup retention
-   ### for visualization purposes
-   def s3bk_tabs_for(backup_type)
-      $s3bk_tab_map ||= s3bk_get_tab_map
-      return $s3bk_tab_map[backup_type]
+   ### for visualization purposes (not to scale)
+   def tabs_for(backup_type)
+      @tab_map ||= generate_tab_map
+      return @tab_map[backup_type]
    end
    
-   def self.s3bk_get_tab_map
+   def generate_tab_map
       tab_map = {}
    
-      sorted_bktypes = $s3bk_config["bk_map"].sort { |a,b| a[1]["retention"] <=> b[1]["retention"] }
+      sorted_bktypes = @config["bk_map"].sort { |a,b| a[1]["retention"] <=> b[1]["retention"] }
    
       i = 0
       sorted_bktypes.each do |bktype|
@@ -114,9 +124,3 @@ module S3bk
       tab_map
    end
 end
-
-$s3bk_config = S3bk::load_config
-cred = Aws::SharedCredentials.new(profile_name: $s3bk_config["aws_profile"])
-Aws.config[:credentials] = cred
-$global_s3 ||= Aws::S3::Resource.new
-

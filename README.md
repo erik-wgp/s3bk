@@ -4,11 +4,11 @@
 ## Usage
 
 ```
-# /data/code/s3bk/s3bk-upload-dir.sh server-sync-20190912
+# ./s3bk-upload-dir.sh /data/bks/server-sync-20190912
 -rw-r--r-- 1 root root 2.9G Oct  2 12:59 /scratch/server-sync-20190912.tar.xz
 uploaded /scratch/server-sync-20190912.tar.xz as short
 
-# /data/code/s3bk/s3bk-auto.rb --rename-suffix .uploaded dbbk_myapp_prod_20190901.xz
+# ./s3bk-auto.rb --rename-suffix .uploaded /data/bks/dbbk_myapp_prod_20190901.xz
 uploaded dbbk_myapp_prod_20190901.xz as long
 
 ```
@@ -65,11 +65,11 @@ AWS_PROFILE=admin aws s3api put-bucket-lifecycle-configuration \
 
 ## Setup
 
-- Run `s3bk-show-placements-by-date.rb` to see how the code interprets the retention for nearby dates
-
 - Copy `s3bk.yml.sample` as `s3bk.yml`, setup the bucket_name and bucket_path, and retentions to match the lifecycle policy
 
 - For directory backups, copy `s3bk-upload-dir-vars.sh.sample` to `s3bk-upload-dir-vars.sh` and set a path for temporary files (which will be the size of the entire folder being backed up, compressed)
+
+- Run `s3bk-show-placements-by-date.rb` to see how the code interprets the retention for nearby dates
 
 - Give it a try:
 ```

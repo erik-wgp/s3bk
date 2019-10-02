@@ -1,0 +1,128 @@
+{
+    "Rules": [
+        {
+            "Filter": {
+                "Prefix": "daily"
+            }, 
+            "Status": "Enabled", 
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }, 
+            "Expiration": {
+                "Days": 32
+            }, 
+            "ID": "daily"
+        }, 
+        {
+            "Filter": {
+                "Prefix": "short"
+            }, 
+            "Status": "Enabled", 
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }, 
+            "Expiration": {
+                "Days": 50
+            }, 
+            "ID": "short"
+        }, 
+        {
+            "Status": "Enabled", 
+            "Filter": {
+                "Prefix": "weekly"
+            }, 
+            "Expiration": {
+                "Days": 93
+            }, 
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }, 
+            "Transitions": [
+                {
+                    "Days": 30, 
+                    "StorageClass": "STANDARD_IA"
+                }
+            ], 
+            "ID": "weekly"
+        }, 
+        {
+            "Status": "Enabled", 
+            "Filter": {
+                "Prefix": "monthly"
+            }, 
+            "Expiration": {
+                "Days": 186
+            }, 
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }, 
+            "Transitions": [
+                {
+                    "Days": 30, 
+                    "StorageClass": "STANDARD_IA"
+                }
+            ], 
+            "ID": "monthly"
+        }, 
+        {
+            "Status": "Enabled", 
+            "Filter": {
+                "Prefix": "archive"
+            }, 
+            "Expiration": {
+                "Days": 3650
+            }, 
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }, 
+            "Transitions": [
+                {
+                    "Days": 5, 
+                    "StorageClass": "GLACIER"
+                }
+            ], 
+            "ID": "archive"
+        }, 
+        {
+            "Status": "Enabled", 
+            "Filter": {
+                "Prefix": "monthlylong"
+            }, 
+            "Expiration": {
+                "Days": 730
+            }, 
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }, 
+            "Transitions": [
+                {
+                    "Days": 33, 
+                    "StorageClass": "GLACIER"
+                }
+            ], 
+            "ID": "monthlylong"
+        }, 
+        {
+            "Status": "Enabled", 
+            "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 365
+            }, 
+            "Filter": {
+                "Prefix": "security"
+            }, 
+            "Expiration": {
+                "Days": 365
+            }, 
+            "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 7
+            }, 
+            "Transitions": [
+                {
+                    "Days": 30, 
+                    "StorageClass": "STANDARD_IA"
+                }
+            ], 
+            "ID": "security"
+        }
+    ]
+}

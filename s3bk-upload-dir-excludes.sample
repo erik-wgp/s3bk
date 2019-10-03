@@ -1,0 +1,8 @@
+*/root/.cpan
+*/var/cache
+*/var/run
+*/data/*/releases/*/tmp
+*/var/spool/postfix
+*/unicorn.sock
+*/data/*stage*/releases
+*/data/*/tmp

@@ -16,6 +16,11 @@ fi
 SRCDIR=$1
 BACKUP_TYPE=$2
 
+if [ "$SRCDIR" = "" ] || [ ! -d "$SRCDIR" ]; then
+   echo "invalid src dir '$SRCDIR'" >&2
+   exit 1
+fi
+
 if [ "$BACKUP_TYPE" != "" ]; then
 	BACKUP_TYPE="--backup-type $BACKUP_TYPE"
 fi
@@ -44,8 +49,8 @@ else
 
    OUTFILE="$S3BK_SCRATCH_DIR/${BKDIR}.tar.xz"
    set -o pipefail
-   echo tar cf - -X /data/code/s3bk/s3bk-upload-dir-excludes --exclude-tag=.nobk $ADDL_TAR_ARGS $BKDIR \| xz -c -T 0 -2 \> $OUTFILE
-        tar cf - -X /data/code/s3bk/s3bk-upload-dir-excludes --exclude-tag=.nobk $ADDL_TAR_ARGS $BKDIR  | xz -c -T 0 -2  > $OUTFILE
+   #echo tar cf - -X /data/code/s3bk/s3bk-upload-dir-excludes --exclude-tag=.nobk $ADDL_TAR_ARGS $BKDIR \| xz -c -T 0 -2 \> $OUTFILE
+         tar cf - -X /data/code/s3bk/s3bk-upload-dir-excludes --exclude-tag=.nobk $ADDL_TAR_ARGS $BKDIR  | xz -c -T 0 -2  > $OUTFILE
    TAR_RC=$?
    set +o pipefail
 fi
@@ -55,9 +60,7 @@ if [[ $TAR_RC != 0 ]]; then
    exit 0
 fi
 
-echo tar rc was $TAR_RC
-
-ls -lh $OUTFILE
+ls -lh $OUTFILE | awk '{print $9" ("$5")"}'
 /data/code/s3bk/s3bk-auto.rb $OUTFILE $BACKUP_TYPE
 
 if [[ $? == 0 ]]; then

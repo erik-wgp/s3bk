@@ -1,4 +1,3 @@
-$LOAD_PATH << File.expand_path(File.dirname(__FILE__))
 
 require "rubygems"
 require 'yaml'
@@ -13,7 +12,7 @@ class S3bkUploader
 
    def initialize(config_file = nil)
       config_file ||= ENV["S3BK_CONFIG"]
-      config_file ||= File.dirname(__FILE__) + "/s3bk.yml"
+      config_file ||= File.dirname(__FILE__) + "/../etc/s3bk.yml"
       if ! File.exists? config_file 
          raise ArgumentError, "Unable to locate config file"
       end

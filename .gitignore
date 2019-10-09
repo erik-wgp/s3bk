@@ -1,4 +1,4 @@
-s3bk-upload-dir-excludes
-s3bk.yml
+etc/s3bk-upload-dir-excludes
+etc/s3bk.yml
 testscript.rb
-s3bk-upload-dir-vars.sh
+etc/s3bk-upload-dir-vars.sh
